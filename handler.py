@@ -251,7 +251,7 @@ def get_user_summary(event, context):
     #     }
     # ).get('Items').pop()
     payment_history = history_table.query(
-        KeyConditionExpression=Key('userId').eq(user['id'])
+        KeyConditionExpression=Key('userId').eq(params['userId'])
     )
     sum_charge = 0
     sum_payment = 0
@@ -333,6 +333,7 @@ def summary_user_wallet(event, context):
     #     KeyConditionExpression=Key('userId').eq(new_payment_history['userId'])
     # )
 
+    # total_amount = 0
     # sum_charge = 0
     # sum_payment = 0
     # times_per_location = {}
@@ -352,6 +353,18 @@ def summary_user_wallet(event, context):
     #     AttributeUpdates={
     #         'amount': {
     #             'Value': total_amount,
+    #             'Action': 'PUT'
+    #         },
+    #         'totalChargeAmount': {
+    #             'Value': sum_charge,
+    #             'Action': 'PUT'
+    #         },
+    #         'sumPayment': {
+    #             'Value': sum_payment,
+    #             'Action': 'PUT'
+    #         },
+    #         'sumPayment': {
+    #             'Value': sum_payment,
     #             'Action': 'PUT'
     #         }
     #     }
