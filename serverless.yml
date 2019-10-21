@@ -8,8 +8,6 @@ provider:
     TZ: Asia/Tokyo
     USER_TABLE:
       Ref: UserTable
-    WALLET_TABLE:
-      Ref: WalletTable
     PAYMENT_HISTORY_TABLE:
       Ref: PaymentHistoryTable
     NOTIFICATION_ENDPOINT: "https://dkxmaha7zk.execute-api.us-west-2.amazonaws.com/prod/notification"
@@ -58,20 +56,23 @@ functions:
       - http:
           path: users/{userId}/history
           method: get
+  # SummaryUserWallet:
+  #   handler: handler.summary_user_wallet
+  #   events:
+  #     - http:
+  #         path: users/summary
+  #         method: post
+  #   events:
+  #     - stream:
+  #         type: dynamodb
+  #         arn:
+  #           Fn::GetAtt:
+  #             - PaymentHistoryTable
+  #             - StreamArn
 
 resources:
   Resources:
     UserTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-    WalletTable:
       Type: AWS::DynamoDB::Table
       Properties:
         BillingMode: PAY_PER_REQUEST
@@ -86,12 +87,14 @@ resources:
       Properties:
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
-          - AttributeName: walletId
+          - AttributeName: userId
             AttributeType: S
           - AttributeName: transactionId
             AttributeType: S
         KeySchema:
-          - AttributeName: walletId
+          - AttributeName: userId
             KeyType: HASH
           - AttributeName: transactionId
             KeyType: RANGE
+        # StreamSpecification:
+        #   StreamViewType: NEW_IMAGES
