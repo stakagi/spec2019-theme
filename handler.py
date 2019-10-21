@@ -272,7 +272,7 @@ def get_user_summary(event, context):
             'currentAmount': user['Item']['amount'],
             'totalChargeAmount': user['Item']['totalChargeAmount'],
             'totalUseAmount': user['Item']['totalUseAmount'],
-            'timesPerLocation': user['Item']['timesPerLocation']
+            'timesPerLocation': json.loads(user['Item']['timesPerLocation'])
         })
     }
 
@@ -355,7 +355,7 @@ def summary_user_wallet(event, context):
             ':amt': total_amount,
             ':camt': sum_charge,
             ':uamt': sum_payment,
-            ':tm': times_per_location
+            ':tm': json.dumps(times_per_location)
         }
     )
     
