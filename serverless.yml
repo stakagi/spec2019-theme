@@ -56,19 +56,19 @@ functions:
       - http:
           path: users/{userId}/history
           method: get
-  # SummaryUserWallet:
-  #   handler: handler.summary_user_wallet
-  #   events:
-  #     - http:
-  #         path: users/summary
-  #         method: post
-  #   events:
-  #     - stream:
-  #         type: dynamodb
-  #         arn:
-  #           Fn::GetAtt:
-  #             - PaymentHistoryTable
-  #             - StreamArn
+  SummaryUserWallet:
+    handler: handler.summary_user_wallet
+    events:
+      - http:
+          path: users/summary
+          method: post
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - PaymentHistoryTable
+              - StreamArn
 
 resources:
   Resources:
@@ -96,5 +96,5 @@ resources:
             KeyType: HASH
           - AttributeName: transactionId
             KeyType: RANGE
-        # StreamSpecification:
-        #   StreamViewType: NEW_IMAGES
+        StreamSpecification:
+          StreamViewType: NEW_IMAGES

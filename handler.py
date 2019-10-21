@@ -250,29 +250,29 @@ def get_user_summary(event, context):
     #         }
     #     }
     # ).get('Items').pop()
-    payment_history = history_table.query(
-        KeyConditionExpression=Key('userId').eq(params['userId'])
-    )
-    sum_charge = 0
-    sum_payment = 0
-    times_per_location = {}
-    for item in payment_history['Items']:
-        sum_charge += item.get('chargeAmount', 0)
-        sum_payment += item.get('useAmount', 0)
-        location_name = _get_location_name(item['locationId'])
-        if location_name not in times_per_location:
-            times_per_location[location_name] = 1
-        else:
-            times_per_location[location_name] += 1
+    # payment_history = history_table.query(
+    #     KeyConditionExpression=Key('userId').eq(params['userId'])
+    # )
+    # sum_charge = 0
+    # sum_payment = 0
+    # times_per_location = {}
+    # for item in payment_history['Items']:
+    #     sum_charge += item.get('chargeAmount', 0)
+    #     sum_payment += item.get('useAmount', 0)
+    #     location_name = _get_location_name(item['locationId'])
+    #     if location_name not in times_per_location:
+    #         times_per_location[location_name] = 1
+    #     else:.;.;.;.uhn
+    #         times_per_location[location_name] += 1
     
     return {
         'statusCode': 200,
         'body': json.dumps({
             'userName': user['Item']['name'],
-            'currentAmount': int(sum_charge)-int(sum_payment),
-            'totalChargeAmount': int(sum_charge),
-            'totalUseAmount': int(sum_payment),
-            'timesPerLocation': times_per_location
+            'currentAmount': user['Item']['amount'],
+            'totalChargeAmount': user['Item']['totalChargeAmount'],
+            'totalUseAmount': user['Item']['totalUseAmount'],
+            'timesPerLocation': user['Item']['timesPerLocation']
         })
     }
 
@@ -324,51 +324,40 @@ def _get_location_name(location_id):
 
 def summary_user_wallet(event, context):
     
-    # user_table = boto3.resource('dynamodb').Table(os.environ['USER_TABLE'])
-    # history_table = boto3.resource('dynamodb').Table(os.environ['PAYMENT_HISTORY_TABLE'])
+    user_table = boto3.resource('dynamodb').Table(os.environ['USER_TABLE'])
+    history_table = boto3.resource('dynamodb').Table(os.environ['PAYMENT_HISTORY_TABLE'])
 
-    # new_payment_history = image = event['Records'][0]['dynamodb']['NewImage']
+    new_payment_history = image = event['Records'][0]['dynamodb']['NewImage']
 
-    # payment_history = history_table.query(
-    #     KeyConditionExpression=Key('userId').eq(new_payment_history['userId'])
-    # )
+    payment_history = history_table.query(
+        KeyConditionExpression=Key('userId').eq(new_payment_history['userId'])
+    )
 
-    # total_amount = 0
-    # sum_charge = 0
-    # sum_payment = 0
-    # times_per_location = {}
-    # for item in payment_history['Items']:
-    #     sum_charge += item.get('chargeAmount', 0)
-    #     sum_payment += item.get('useAmount', 0)
-    #     location_name = _get_location_name(item['locationId'])
-    #     if location_name not in times_per_location:
-    #         times_per_location[location_name] = 1
-    #     else:
-    #         times_per_location[location_name] += 1
+    total_amount = 0
+    sum_charge = 0
+    sum_payment = 0
+    times_per_location = {}
+    for item in payment_history['Items']:
+        sum_charge += item.get('chargeAmount', 0)
+        sum_payment += item.get('useAmount', 0)
+        location_name = _get_location_name(item['locationId'])
+        if location_name not in times_per_location:
+            times_per_location[location_name] = 1
+        else:
+            times_per_location[location_name] += 1
 
-    # user_table.update_item(
-    #     Key={
-    #         'userId': new_payment_history['userId']
-    #     },
-    #     AttributeUpdates={
-    #         'amount': {
-    #             'Value': total_amount,
-    #             'Action': 'PUT'
-    #         },
-    #         'totalChargeAmount': {
-    #             'Value': sum_charge,
-    #             'Action': 'PUT'
-    #         },
-    #         'totalUseAmount': {
-    #             'Value': sum_payment,
-    #             'Action': 'PUT'
-    #         },
-    #         'timesPerLocation': {
-    #             'Value': times_per_location,
-    #             'Action': 'PUT'
-    #         }
-    #     }
-    # )
+    user_table.update_item(
+        Key={
+            'userId': new_payment_history['userId']
+        },
+        UpdateExpression="set amount = :amt, totalChargeAmount=:camt, totalUseAmount=:uamt, timesPerLocation=:tm",
+        ExpressionAttributeValues={
+            ':amt': total_amount,
+            ':camt': sum_charge,
+            ':uamt': sum_payment,
+            ':tm': times_per_location
+        }
+    )
     
     return {
         'statusCode': 200,
