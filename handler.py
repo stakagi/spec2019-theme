@@ -327,10 +327,10 @@ def summary_user_wallet(event, context):
     user_table = boto3.resource('dynamodb').Table(os.environ['USER_TABLE'])
     history_table = boto3.resource('dynamodb').Table(os.environ['PAYMENT_HISTORY_TABLE'])
 
-    new_payment_history = event['Records'][0]['dynamodb']['NewImage']
+    userId = event['Records'][0]['dynamodb']['NewImage']["S"]
 
     payment_history = history_table.query(
-        KeyConditionExpression=Key('userId').eq(new_payment_history['userId'])
+        KeyConditionExpression=Key('userId').eq(userId)
     )
 
     total_amount = 0
@@ -348,7 +348,7 @@ def summary_user_wallet(event, context):
 
     user_table.update_item(
         Key={
-            'userId': new_payment_history['userId']
+            'userId': userId
         },
         UpdateExpression="set amount = :amt, totalChargeAmount=:camt, totalUseAmount=:uamt, timesPerLocation=:tm",
         ExpressionAttributeValues={
