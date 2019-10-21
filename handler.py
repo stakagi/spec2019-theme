@@ -348,7 +348,7 @@ def summary_user_wallet(event, context):
 
     user_table.update_item(
         Key={
-            'userId': userId
+            'id': userId
         },
         UpdateExpression="set amount = :amt, totalChargeAmount=:camt, totalUseAmount=:uamt, timesPerLocation=:tm",
         ExpressionAttributeValues={
