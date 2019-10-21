@@ -359,12 +359,12 @@ def summary_user_wallet(event, context):
     #             'Value': sum_charge,
     #             'Action': 'PUT'
     #         },
-    #         'sumPayment': {
+    #         'totalUseAmount': {
     #             'Value': sum_payment,
     #             'Action': 'PUT'
     #         },
-    #         'sumPayment': {
-    #             'Value': sum_payment,
+    #         'timesPerLocation': {
+    #             'Value': times_per_location,
     #             'Action': 'PUT'
     #         }
     #     }
