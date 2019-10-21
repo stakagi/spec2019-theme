@@ -200,7 +200,7 @@ def wallet_transfer(event, context):
     )
     history_table.put_item(
         Item={
-            'walletId': from_wallet['id'],
+            'walletId': to_wallet['id'],
             'transactionId': body['transactionId'],
             'chargeAmount': body['transferAmount'],
             'locationId': body['locationId'],
@@ -272,7 +272,7 @@ def get_user_summary(event, context):
         'statusCode': 200,
         'body': json.dumps({
             'userName': user['Item']['name'],
-            'currentAmount': int(wallet['amount']),
+            'currentAmount': int(sum_charge)-int(sum_payment),
             'totalChargeAmount': int(sum_charge),
             'totalUseAmount': int(sum_payment),
             'timesPerLocation': times_per_location
