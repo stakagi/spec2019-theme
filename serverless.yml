@@ -45,6 +45,11 @@ functions:
           path: wallet/charge_async
           method: post
           async: true
+          response:
+            headers:
+              Status: 202
+              Content-Type: application/json
+            template: "{'result': 'Assepted. Please wait for the notification.'}"
   WalletUse:
     handler: handler.wallet_use
     timeout: 30
@@ -53,6 +58,14 @@ functions:
       - http:
           path: wallet/use
           method: post
+  WalletUseAsync:
+    handler: handler.wallet_use_async
+    timeout: 30
+    reservedConcurrency: 100
+    events:
+      - http:
+          path: wallet/use_async
+          method: post
   WalletTransfer:
     handler: handler.wallet_transfer
     timeout: 30
@@ -60,6 +73,14 @@ functions:
     events:
       - http:
           path: wallet/transfer
+          method: post
+  WalletTransferAsync:
+    handler: handler.wallet_transfer_async
+    timeout: 30
+    reservedConcurrency: 100
+    events:
+      - http:
+          path: wallet/transfer_async
           method: post
   GetUserSummary:
     handler: handler.get_user_summary

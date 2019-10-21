@@ -85,6 +85,8 @@ def wallet_charge(event, context):
         'body': json.dumps({'result': 'Assepted. Please wait for the notification.'})
     }
 
+async def wallet_use_async(event, context):
+    return asyncio.ensure_future(wallet_use(event, context))
 
 def wallet_use(event, context):
     # wallet_table = boto3.resource('dynamodb').Table(os.environ['WALLET_TABLE'])
@@ -141,6 +143,8 @@ def wallet_use(event, context):
         'body': json.dumps({'result': 'Assepted. Please wait for the notification.'})
     }
 
+async def wallet_transfer_async(event, context):
+    return asyncio.ensure_future(wallet_transfer(event, context))
 
 def wallet_transfer(event, context):
     # wallet_table = boto3.resource('dynamodb').Table(os.environ['WALLET_TABLE'])
