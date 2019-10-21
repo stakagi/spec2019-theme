@@ -110,3 +110,174 @@ resources:
             KeyType: RANGE
         # StreamSpecification:
         #   StreamViewType: NEW_IMAGES
+    ServerlessVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: "10.200.0.0/16"
+    ElasticIpLambda:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+    InternetGatewayLambda:
+      Type: AWS::EC2::InternetGateway
+    VPCGatewayAttachmentLambda:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        InternetGatewayId:
+          Ref: InternetGatewayLambda
+    NatGatewayLambda:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - ElasticIpLambda
+            - AllocationId
+        SubnetId:
+          Ref: ServerlessPublicSubnetA
+    ServerlessPrivateSubnetA:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: "10.200.101.0/24"
+    ServerlessPublicSubnetA:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: "10.200.1.0/24"
+#    ServerlessPrivateSubnetB:
+#      DependsOn: ServerlessVPC
+#      Type: AWS::EC2::Subnet
+#      Properties:
+#        VpcId:
+#          Ref: ServerlessVPC
+#        AvailabilityZone: ${self:provider.region}b
+#        CidrBlock: "10.200.102.0/24"
+#    ServerlessPublicSubnetB:
+#      DependsOn: ServerlessVPC
+#      Type: AWS::EC2::Subnet
+#      Properties:
+#        VpcId:
+#          Ref: ServerlessVPC
+#        AvailabilityZone: ${self:provider.region}b
+#        CidrBlock: "10.200.2.0/24"
+    DefaultPrivateRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    DefaultPrivateRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: DefaultPrivateRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGatewayLambda
+      DependsOn: VPCGatewayAttachmentLambda
+    DefaultPublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    DefaultPublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: DefaultPublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: InternetGatewayLambda
+      DependsOn: VPCGatewayAttachmentLambda
+    SubnetRouteTableAssociationLambdaPrivateA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: ServerlessPrivateSubnetA
+        RouteTableId:
+          Ref: DefaultPrivateRouteTable
+    SubnetRouteTableAssociationLambdaPublicA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: ServerlessPublicSubnetA
+        RouteTableId:
+          Ref: DefaultPublicRouteTable
+#    SubnetRouteTableAssociationLambdaPrivateB:
+#      Type: AWS::EC2::SubnetRouteTableAssociation
+#      Properties:
+#        SubnetId:
+#          Ref: ServerlessPrivateSubnetB
+#        RouteTableId:
+#          Ref: DefaultPrivateRouteTable
+#    SubnetRouteTableAssociationLambdaPublicB:
+#      Type: AWS::EC2::SubnetRouteTableAssociation
+#      Properties:
+#        SubnetId:
+#          Ref: ServerlessPublicSubnetB
+#        RouteTableId:
+#          Ref: DefaultPublicRouteTable
+    ServerlessSecurityGroup:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: SecurityGroup for Serverless Functions
+        VpcId:
+          Ref: ServerlessVPC
+    serverlessSecurityGroupIngress:
+      Type: AWS::EC2::SecurityGroupIngress
+      DependsOn: ServerlessSecurityGroup
+      Properties:
+        GroupId: !GetAtt ServerlessSecurityGroup.GroupId
+        IpProtocol: tcp
+        FromPort: 8111
+        ToPort: 8111
+        SourceSecurityGroupId: !GetAtt ServerlessSecurityGroup.GroupId
+    daxRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: "Allow"
+              Principal:
+                Service:
+                  - "dax.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Policies:
+          -
+            PolicyName: "allowDynamoDB"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                -
+                  Effect: "Allow"
+                  Action: "dynamodb:*"
+                  Resource: "*"
+        RoleName: "DAXtoDynamoRoleTHN"
+    subnetGroupClu:
+      Type: AWS::DAX::SubnetGroup
+      Properties:
+        SubnetGroupName: "CFNClusterSubnetGrp"
+        Description: "Subnet group for DAX cluster"
+        SubnetIds:
+          - Ref: ServerlessPrivateSubnetA
+    daxCluster:
+      Type: AWS::DAX::Cluster
+      Properties:
+        ClusterName: "spec2019-thn"
+        NodeType: "dax.r3.large"
+        ReplicationFactor: 1
+        IAMRoleARN: !GetAtt daxRole.Arn
+        Description: "DAX cluster created with CloudFormation"
+        SubnetGroupName: !Ref subnetGroupClu
+      DependsOn: daxRole
