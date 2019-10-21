@@ -7,6 +7,7 @@ import boto3
 import requests
 
 from boto3.dynamodb.conditions import Key, Attr
+import asyncio
 
 
 def user_create(event, context):
@@ -30,6 +31,9 @@ def user_create(event, context):
         'statusCode': 200,
         'body': json.dumps({'result': 'ok'})
     }
+
+async def wallet_charge_async(event, context):
+    return asyncio.ensure_future(wallet_charge(event, context))
 
 
 def wallet_charge(event, context):

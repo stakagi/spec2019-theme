@@ -36,6 +36,15 @@ functions:
       - http:
           path: wallet/charge
           method: post
+  WalletChargeAsync:
+    handler: handler.wallet_charge_async
+    timeout: 30
+    reservedConcurrency: 100
+    events:
+      - http:
+          path: wallet/charge_async
+          method: post
+          async: true
   WalletUse:
     handler: handler.wallet_use
     timeout: 30
